@@ -2,11 +2,11 @@
 
 # set up current directory as a git repo and push to github.
 
-
 REPONAME=$(basename "$(pwd)") # default reponame is the current directory
 VISIBILITY_ARG="--private"
 DESCRIPTION=""
 FILE=""
+IS_GIT_REPO=false
 
 while [[ $# -gt 0 ]]; do
     key="$1"
@@ -45,7 +45,7 @@ done
 
 # create repo directory if necessary
 if [ -n "$FILE" ]; then
-    # set variable to $FILE 
+    # set variable to $FILE
     mkdir "$REPONAME"
     mv "$FILE" "$REPONAME"
     cd "$REPONAME" || exit
@@ -56,9 +56,12 @@ if [ ! -f README.md ]; then
     echo "# $REPONAME" >README.md
 fi
 
-git init
-git add .
-git commit -m "initial commit"
+if [ ! "$IS_GIT_REPO" = true ]; then
+    git init
+    git add .
+    git commit -m "initial commit"
+fi
+
 # create repo on github using gh repo create with relevant arguments
 gh repo create "$REPONAME" $VISIBILITY_ARG --description="$DESCRIPTION" --source=. --remote "origin" --push
 
