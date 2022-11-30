@@ -1,0 +1,67 @@
+#!/usr/bin/env bash
+
+# set up current directory as a git repo and push to github.
+
+
+REPONAME=$(basename "$(pwd)") # default reponame is the current directory
+VISIBILITY_ARG="--private"
+DESCRIPTION=""
+FILE=""
+
+while [[ $# -gt 0 ]]; do
+    key="$1"
+
+    case $key in
+    -p | --public)
+        VISIBILITY_ARG="--public"
+        shift # past argument
+        ;;
+    -d | --description)
+        DESCRIPTION="$2"
+        shift # past argument
+        shift # past value
+        ;;
+    -f | --file)
+        FILE="$2"
+        # set reponame to the filename without extension
+        REPONAME="${FILE%.*}"
+        shift # past argument
+        shift # past value
+        ;;
+    -h | --help)
+        echo "Usage: ghr [options]"
+        echo "Options:"
+        echo "    -p, --public     Make the repo public"
+        echo "    -d, --description  A description of the repo"
+        echo "    -f, --file       The file to be uploaded (the repo will be created with the same name as the file)"
+        echo "    -h, --help       Show this help message"
+        exit 0
+        ;;
+    *)        # unknown option
+        shift # past argument
+        ;;
+    esac
+done
+
+# create repo directory if necessary
+if [ -n "$FILE" ]; then
+    # set variable to $FILE 
+    mkdir "$REPONAME"
+    mv "$FILE" "$REPONAME"
+    cd "$REPONAME" || exit
+fi
+
+# create README.md if it doesn't exist
+if [ ! -f README.md ]; then
+    echo "# $REPONAME" >README.md
+fi
+
+git init
+git add .
+git commit -m "initial commit"
+# create repo on github using gh repo create with relevant arguments
+gh repo create "$REPONAME" $VISIBILITY_ARG --description="$DESCRIPTION" --source=. --remote "origin" --push
+
+# Open in browser
+echo "Opening in browser..."
+gh repo view --web
